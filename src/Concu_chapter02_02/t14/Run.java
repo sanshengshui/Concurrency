@@ -1,7 +1,7 @@
-package Concu_chapter02_02.t13;
+package Concu_chapter02_02.t14;
 
 /**
- * Created by jamesmsw on 17-1-3.
+ * Created by jamesmsw on 17-1-4.
  */
 public class Run {
     public static void main(String[] args){
@@ -13,7 +13,6 @@ public class Run {
         ThreadB b=new ThreadB(service2);
         b.setName("B");
         b.start();
-
 
     }
 }
