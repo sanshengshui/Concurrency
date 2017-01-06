@@ -1,21 +1,40 @@
 For Further Reading
-Concurrent Programming in Java: Design Principles and Pattern (2nd Edition) by Doug Lea. A comprehensive work by a leading expert, who's also the architect of the Java platform's concurrency framework.
-Java Concurrency in Practice by Brian Goetz, Tim Peierls, Joshua Bloch, Joseph Bowbeer, David Holmes, and Doug Lea. A practical guide designed to be accessible to the novice.
-Effective Java Programming Language Guide (2nd Edition) by Joshua Bloch. Though this is a general programming guide, its chapter on threads contains essential "best practices" for concurrent programming.
-Concurrency: State Models & Java Programs (2nd Edition), by Jeff Magee and Jeff Kramer. An introduction to concurrent programming through a combination of modeling and practical examples.
-Java Concurrent Animated: Animations that show usage of concurrency features.
+Concurrent Programming in Java
+: Design Principles and Pattern (2nd Edition) by Doug Lea. A comprehensive work by a leading expert,
+ who's also the architect of the Java platform's concurrency framework.
+
+Java Concurrency in Practice
+by Brian Goetz, Tim Peierls, Joshua Bloch, Joseph Bowbeer, David Holmes, and Doug Lea.
+A practical guide designed to be accessible to the novice.
+
+Effective Java Programming Language Guide (2nd Edition)
+by Joshua Bloch. Though this is a general programming guide,
+its chapter on threads contains essential "best practices" for concurrent programming.
+
+Concurrency:
+State Models & Java Programs (2nd Edition), by Jeff Magee and Jeff Kramer.
+An introduction to concurrent programming through a combination of modeling and practical examples.
+
+Java Concurrent Animated:
+Animations that show usage of concurrency features.
 
 
 Thread Objects
-Each thread is associated with an instance of the class Thread.There are two basic strategies for using Thread objects to create a concurrent application.
+Each thread is associated with an instance of the class Thread.
+There are two basic strategies for using Thread objects to create a concurrent application.
 
 (1)
-To directly control thread creation and management,simply instantiate Thread each time the application needs to initiate an asynchronous task.
+To directly control thread creation and management,
+simply instantiate Thread each time the application needs to initiate an asynchronous task.
+
 (2)
-To abstract thread management from the rest of your application,pass the application’s tasks to an executor.
+To abstract thread management from the rest of your application,
+pass the application’s tasks to an executor.
 
 Defining and Starting a Thread
-An application that creates an instance of Thread must provide the code that will run in that thread,There are two ways to do this:
+An application that creates an instance of Thread must provide the code that will run in that thread,
+There are two ways to do this:
+
 .  Provide a Runnable object.
 .  Subclass Thread.
 
@@ -24,16 +43,30 @@ Pausing Execution with Sleep
 Interrupts
 
 
-系统通过严格的ACID测试，否则空谈事务的概念是不够的。ACID表示原子性（atomicity），一致性（consistency），隔离性(isolation)和持久性(durability)。一个运行良好的事务处理系统，必须具备这些标准特征。
+系统通过严格的ACID测试，否则空谈事务的概念是不够的。
+ACID表示原子性（atomicity），一致性（consistency），隔离性(isolation)和持久性(durability)。
+一个运行良好的事务处理系统，必须具备这些标准特征。
+
 原子性
-一个事务必须被视为一个不可分割的最小工作单元，整个事务中的所有操作要么全部提交成功，要么全部失败回滚，对于一个事务来说，不可能只执行其中的一部分操作，这就是事务的原子性。
+一个事务必须被视为一个不可分割的最小工作单元，整个事务中的所有操作要么全部提交成功，要么全部失败回滚，
+对于一个事务来说，不可能只执行其中的一部分操作，这就是事务的原子性。
+
 一致性
-数据库总是从一个一致性的状态转换到另外一个一致性的状态。在前面的例子中，一致性确保了，即使在执行第三，四条语句之间时系统崩溃，支票账户中也不会损失200美元，因为事务最终没有提交，所以事务中所做的修改也不会保存到数据库中。
+数据库总是从一个一致性的状态转换到另外一个一致性的状态。在前面的例子中，一致性确保了，
+即使在执行第三，四条语句之间时系统崩溃，支票账户中也不会损失200美元，因为事务最终没有提交，所以事务中所做的修改也不会保存到数据库中。
+
 隔离性
-通常来说，一个事务所做的修改在最终提交以前，对其他事务是不可见的。在前面的例子中，当执行完第三条语句，第四条语句还未开始时，此时有另外一个账户汇总程序开始运行，则其看到的支票账户的余额并没有被减去200美元。后面我们讨论隔离级别的时候，会发现为什么我们要说“通常来说”是不可见的。
+通常来说，一个事务所做的修改在最终提交以前，对其他事务是不可见的。在前面的例子中，当执行完第三条语句，第四条语句还未开始时，
+此时有另外一个账户汇总程序开始运行，则其看到的支票账户的余额并没有被减去200美元。
+后面我们讨论隔离级别的时候，会发现为什么我们要说“通常来说”是不可见的。
+
 持久性
-一旦事务提交，则其所做的修改就会永久的保存在数据库中。此时即使系统崩溃，修改的数据也不会丢失。持久性是个有点模糊的概念，因为实际上持久性也分很多不同的级别。有些持久性策略能够提供非常强的安全保障，而有些则未必。而且不可能有能做到100%的持久性保证的策略
-(如果数据库本身就能做到真正的持久性，那么备份又怎么能增加持久性呢？)。在后面的一些章节中，我们会继续讨论MySQL中持久性的真正含义
+一旦事务提交，则其所做的修改就会永久的保存在数据库中。此时即使系统崩溃，修改的数据也不会丢失。
+持久性是个有点模糊的概念，因为实际上持久性也分很多不同的级别。有些持久性策略能够提供非常强的安全保障，
+而有些则未必。而且不可能有能做到100%的持久性保证的策略
+
+(如果数据库本身就能做到真正的持久性，那么备份又怎么能增加持久性呢？)。
+在后面的一些章节中，我们会继续讨论MySQL中持久性的真正含义
 
 
 
@@ -453,7 +486,7 @@ at the time that another thread tries to stop it. If the stop method merely sets
 To rectify this situation, the stop method must ensure that the target thread resumes immediately if it is suspended.
  Once the target thread resumes, it must recognize immediately that it has been stopped, and exit gracefully.
   Here's how the resulting run and stop methods look:
-  
+
    public void run() {
         Thread thisThread = Thread.currentThread();
         while (blinker == thisThread) {
