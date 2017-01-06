@@ -1,0 +1,500 @@
+For Further Reading
+Concurrent Programming in Java: Design Principles and Pattern (2nd Edition) by Doug Lea. A comprehensive work by a leading expert, who's also the architect of the Java platform's concurrency framework.
+Java Concurrency in Practice by Brian Goetz, Tim Peierls, Joshua Bloch, Joseph Bowbeer, David Holmes, and Doug Lea. A practical guide designed to be accessible to the novice.
+Effective Java Programming Language Guide (2nd Edition) by Joshua Bloch. Though this is a general programming guide, its chapter on threads contains essential "best practices" for concurrent programming.
+Concurrency: State Models & Java Programs (2nd Edition), by Jeff Magee and Jeff Kramer. An introduction to concurrent programming through a combination of modeling and practical examples.
+Java Concurrent Animated: Animations that show usage of concurrency features.
+
+
+Thread Objects
+Each thread is associated with an instance of the class Thread.There are two basic strategies for using Thread objects to create a concurrent application.
+
+(1)
+To directly control thread creation and management,simply instantiate Thread each time the application needs to initiate an asynchronous task.
+(2)
+To abstract thread management from the rest of your application,pass the application’s tasks to an executor.
+
+Defining and Starting a Thread
+An application that creates an instance of Thread must provide the code that will run in that thread,There are two ways to do this:
+.  Provide a Runnable object.
+.  Subclass Thread.
+
+Pausing Execution with Sleep
+
+Interrupts
+
+
+系统通过严格的ACID测试，否则空谈事务的概念是不够的。ACID表示原子性（atomicity），一致性（consistency），隔离性(isolation)和持久性(durability)。一个运行良好的事务处理系统，必须具备这些标准特征。
+原子性
+一个事务必须被视为一个不可分割的最小工作单元，整个事务中的所有操作要么全部提交成功，要么全部失败回滚，对于一个事务来说，不可能只执行其中的一部分操作，这就是事务的原子性。
+一致性
+数据库总是从一个一致性的状态转换到另外一个一致性的状态。在前面的例子中，一致性确保了，即使在执行第三，四条语句之间时系统崩溃，支票账户中也不会损失200美元，因为事务最终没有提交，所以事务中所做的修改也不会保存到数据库中。
+隔离性
+通常来说，一个事务所做的修改在最终提交以前，对其他事务是不可见的。在前面的例子中，当执行完第三条语句，第四条语句还未开始时，此时有另外一个账户汇总程序开始运行，则其看到的支票账户的余额并没有被减去200美元。后面我们讨论隔离级别的时候，会发现为什么我们要说“通常来说”是不可见的。
+持久性
+一旦事务提交，则其所做的修改就会永久的保存在数据库中。此时即使系统崩溃，修改的数据也不会丢失。持久性是个有点模糊的概念，因为实际上持久性也分很多不同的级别。有些持久性策略能够提供非常强的安全保障，而有些则未必。而且不可能有能做到100%的持久性保证的策略
+(如果数据库本身就能做到真正的持久性，那么备份又怎么能增加持久性呢？)。在后面的一些章节中，我们会继续讨论MySQL中持久性的真正含义
+
+
+
+Volatile关键字
+
+引用自:
+http://ifeve.com/volatile/
+
+在多线程并发编程中synchronized和Volatile都扮演着重要的角色，Volatile是轻量级的synchronized，
+它在多处理器开发中保证了共享变量的“可见性”。可见性的意思是当一个线程修改一个共享变量时，另外一个线程能读到这个修改的值。
+它在某些情况下比synchronized的开销更小，
+本文将深入分析在硬件层面上Inter处理器是如何实现Volatile的，通过深入分析能帮助我们正确的使用Volatile变量。
+
+
+术语定义
+术语 英文单词   描述
+共享变量      在多个线程之间能够被共享的变量被称为共享变量。共享变量包括所有的实例变量，静态变量和数组元素。他们都被存放在堆内存中，
+Volatile只作用于共享变量。
+内存屏障   Memory Barriers    是一组处理器指令，用于实现对内存操作的顺序限制。
+缓冲行    Cache line 缓存中可以分配的最小存储单位。处理器填写缓存线时会加载整个缓存线，需要使用多个主内存读周期。
+原子操作   Atomic operations  不可中断的一个或一系列操作。
+缓存行填充  cache line fill    当处理器识别到从内存中读取操作数是可缓存的，处理器读取整个缓存行到适当的缓存（L1，L2，L3的或所有）
+缓存命中   cache hit  如果进行高速缓存行填充操作的内存位置仍然是下次处理器访问的地址时，处理器从缓存中读取操作数，而不是从内存。
+写命中    write hit  当处理器将操作数写回到一个内存缓存的区域时，它首先会检查这个缓存的内存地址是否在缓存行中，
+如果存在一个有效的缓存行，则处理器将这个操作数写回到缓存，而不是写回到内存，这个操作被称为写命中。
+写缺失    write misses the cache 一个有效的缓存行被写入到不存在的内存区域。
+
+Volatile的官方定义
+Java语言规范第三版中对volatile的定义如下： java编程语言允许线程访问共享变量，为了确保共享变量能被准确和一致的更新，
+线程应该确保通过排他锁单独获得这个变量。Java语言提供了volatile，在某些情况下比锁更加方便。
+如果一个字段被声明成volatile，java线程内存模型确保所有线程看到这个变量的值是一致的。
+
+为什么要使用Volatile
+Volatile变量修饰符如果使用恰当的话，它比synchronized的使用和执行成本会更低，因为它不会引起线程上下文的切换和调度。
+
+Volatile的实现原理
+那么Volatile是如何来保证可见性的呢？在x86处理器下通过工具获取JIT编译器生成的汇编指令来看看对Volatile进行写操作CPU会做什么事情。
+
+Java代码：    instance = new Singleton();//instance是volatile变量
+汇编代码：  0x01a3de1d: movb $0x0,0x1104800(%esi);0x01a3de24: lock addl $0x0,(%esp);
+有volatile变量修饰的共享变量进行写操作的时候会多第二行汇编代码，
+通过查IA-32架构软件开发者手册可知，lock前缀的指令在多核处理器下会引发了两件事情。
+
+将当前处理器缓存行的数据会写回到系统内存。
+这个写回内存的操作会引起在其他CPU里缓存了该内存地址的数据无效。
+处理器为了提高处理速度，不直接和内存进行通讯，而是先将系统内存的数据读到内部缓存（L1,L2或其他）后再进行操作，
+但操作完之后不知道何时会写到内存，如果对声明了Volatile变量进行写操作，JVM就会向处理器发送一条Lock前缀的指令，
+将这个变量所在缓存行的数据写回到系统内存。但是就算写回到内存，如果其他处理器缓存的值还是旧的，再执行计算操作就会有问题，
+所以在多处理器下，为了保证各个处理器的缓存是一致的，就会实现缓存一致性协议，每个处理器通过嗅探在总线上传播的数据来检查自己缓存的值
+是不是过期了，当处理器发现自己缓存行对应的内存地址被修改，就会将当前处理器的缓存行设置成无效状态，
+当处理器要对这个数据进行修改操作的时候，会强制重新从系统内存里把数据读到处理器缓存里。
+
+这两件事情在IA-32软件开发者架构手册的第三册的多处理器管理章节（第八章）中有详细阐述。
+
+Lock前缀指令会引起处理器缓存回写到内存。Lock前缀指令导致在执行指令期间，声言处理器的 LOCK# 信号。
+在多处理器环境中，LOCK# 信号确保在声言该信号期间，处理器可以独占使用任何共享内存。（
+因为它会锁住总线，导致其他CPU不能访问总线，不能访问总线就意味着不能访问系统内存）
+，但是在最近的处理器里，LOCK＃信号一般不锁总线，而是锁缓存，毕竟锁总线开销比较大。
+在8.1.4章节有详细说明锁定操作对处理器缓存的影响，对于Intel486和Pentium处理器，在锁操作时，总是在总线上声言LOCK#信号。
+但在P6和最近的处理器中，如果访问的内存区域已经缓存在处理器内部，则不会声言LOCK#信号。相反地，
+它会锁定这块内存区域的缓存并回写到内存，并使用缓存一致性机制来确保修改的原子性，此操作被称为“缓存锁定”，
+缓存一致性机制会阻止同时修改被两个以上处理器缓存的内存区域数据。
+
+一个处理器的缓存回写到内存会导致其他处理器的缓存无效。
+IA-32处理器和Intel 64处理器使用MESI（修改，独占，共享，无效）控制协议去维护内部缓存和其他处理器缓存的一致性。
+在多核处理器系统中进行操作的时候，IA-32 和Intel 64处理器能嗅探其他处理器访问系统内存和它们的内部缓存。
+它们使用嗅探技术保证它的内部缓存，系统内存和其他处理器的缓存的数据在总线上保持一致。例如在Pentium和P6 family处理器中，
+如果通过嗅探一个处理器来检测其他处理器打算写内存地址，而这个地址当前处理共享状态，那么正在嗅探的处理器将无效它的缓存行，
+在下次访问相同内存地址时，强制执行缓存行填充。
+
+Volatile的使用优化
+著名的Java并发编程大师Doug lea在JDK7的并发包里新增一个队列集合类LinkedTransferQueue，
+他在使用Volatile变量时，用一种追加字节的方式来优化队列出队和入队的性能。
+
+追加字节能优化性能？这种方式看起来很神奇，但如果深入理解处理器架构就能理解其中的奥秘。让我们先来看看LinkedTransferQueue这个类，
+它使用一个内部类类型来定义队列的头队列（Head）和尾节点（tail），
+而这个内部类PaddedAtomicReference相对于父类AtomicReference只做了一件事情，就将共享变量追加到64字节。
+我们可以来计算下，一个对象的引用占4个字节，它追加了15个变量共占60个字节，再加上父类的Value变量，一共64个字节。
+
+01
+/** head of the queue */
+02
+private transient final PaddedAtomicReference<QNode> head;
+03
+
+04
+/** tail of the queue */
+05
+private transient final PaddedAtomicReference<QNode> tail;
+06
+
+07
+static final class PaddedAtomicReference <T> extends AtomicReference <T> {
+08
+
+09
+ // enough padding for 64bytes with 4byte refs
+10
+ Object p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, pa, pb, pc, pd, pe;
+11
+
+12
+ PaddedAtomicReference(T r) {
+13
+
+14
+   super(r);
+15
+
+16
+ }
+17
+
+18
+}
+19
+
+20
+public class AtomicReference <V> implements java.io.Serializable {
+21
+
+22
+ private volatile V value;
+23
+
+24
+ //省略其他代码
+25
+
+26
+｝
+为什么追加64字节能够提高并发编程的效率呢？ 因为对于英特尔酷睿i7，酷睿， Atom和NetBurst，
+Core Solo和Pentium M处理器的L1，L2或L3缓存的高速缓存行是64个字节宽，不支持部分填充缓存行，
+这意味着如果队列的头节点和尾节点都不足64字节的话，处理器会将它们都读到同一个高速缓存行中，
+在多处理器下每个处理器都会缓存同样的头尾节点，当一个处理器试图修改头接点时会将整个缓存行锁定，
+那么在缓存一致性机制的作用下，会导致其他处理器不能访问自己高速缓存中的尾节点，
+而队列的入队和出队操作是需要不停修改头接点和尾节点，所以在多处理器的情况下将会严重影响到队列的入队和出队效率。
+Doug lea使用追加到64字节的方式来填满高速缓冲区的缓存行，避免头接点和尾节点加载到同一个缓存行，使得头尾节点在修改时不会互相锁定。
+
+那么是不是在使用Volatile变量时都应该追加到64字节呢？不是的。在两种场景下不应该使用这种方式。
+第一：缓存行非64字节宽的处理器，如P6系列和奔腾处理器，它们的L1和L2高速缓存行是32个字节宽。
+第二：共享变量不会被频繁的写。因为使用追加字节的方式需要处理器读取更多的字节到高速缓冲区，这本身就会带来一定的性能消耗，
+共享变量如果不被频繁写的话，锁的几率也非常小，就没必要通过追加字节的方式来避免相互锁定。
+
+
+
+１）关键字volatile是线程同步的轻量级实现，所以volatile性能肯定比synchronized要好，并且volatile只能修饰于变量，
+而synchronized可以修饰于变量，而synchronized可以修饰方法，以及代码块。随着jdk新版本的发布，synchronized关键字在执行效率
+上得到很大提升，在开发中使用synchronized关键字的比率还是比较大的
+（２）多线程访问volatile不会发生阻塞，而synchronized会出现阻塞。
+（３）volatile能保证数据的可见性，但不能保证原子性；而synchronized可以保证原子性，也可以间接保证可见性，
+因为它会将私有内存和公共内存中的数据做同步。
+（４）关键字volatile解决的是变量在多个线程之间的可见性；而synchronized关键字解决的是多个线程之间访问资源的同步性。
+
+线程安全包括原子性和可见性两个方面，java的同步机制都是围绕这两个方面来确保线程安全的。
+
+
+
+1.
+传统的线程之间的通讯实现
+一个线程不停地通过while语句轮询机制来检测一个条件，这样会浪费CPU资源。如果轮询的时间间隔很小，更浪费CPU资源；如果轮询的时间
+间隔很大，有可能会取不到想要得到的数据。所以就需要有一种机制来实现减少CPU的资源浪费，而且还可以实现在多个线程间通信，它就是
+"wait/notify"机制
+
+2.
+等待/通知机制的实现
+方法wait()的作用是使当前执行代码的线程进行等待，wait()方法是Object类的方法，该方法用来将当前线程置于"预执行队列"中，并且在
+wait()所在的代码行处停止执行，直到接到通知或被中断为止。在调用wait()之前，线程必须获得该对象的对象级别锁，即只能在同步方法或
+同步块中调用wait()方法。在执行wait()方法后,当前线程释放锁。在从wait()返回前，线程与其他线程竞争重新获得锁。如果调用wait()时
+没有持有适当的锁，则抛出IllegalMonitorStateException,它是RuntimeException的一个子类，因此，不需要try-catch语句进行捕捉异常。
+
+3.
+方法notify()也要在同步方法或同步块中调用,即在调用前，线程也必须获得该对象的对象级别锁。如果调用notify()时没有持有适当的锁，
+也会抛出IllegalMonitorStateException.该方法用来通知那些可能等待该对象的对象锁的其他线程，如果有多个线程等待，则由线程规划器
+随机挑选出其中一个呈wait状态的线程，对其发出通知notify,并使它等待获取该对象的对象锁。需要说明的是，在执行notify()方法后，当前
+线程不会马上释放该对象锁，呈wait状态的线程也并不能马上获取该对象锁，要等到执行notify()方法的线程将程序执行完，也就是退出
+synchronized代码块后，当前线程才会释放锁，而呈wait状态所在的线程才可以获取该对象锁.当第一个获得了该对象锁的wait线程运行完毕
+以后，它会释放掉该对象锁，此时如果该对象没有再次使用notify语句，则即便该对象已经空闲，其他wait状态等待的线程由于没有得到该对象的
+通知，还会继续阻塞在wait状态，直到这个对象发出一个notify或nofifyAll.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+应用自：http://docs.oracle.com/javase/8/docs/api/
+Java Thread Primitive Deprecation
+
+Why is Thread.stop deprecated?
+Because it is inherently unsafe. Stopping a thread causes it to unlock all the monitors that it has locked.
+(The monitors are unlocked as the ThreadDeath exception propagates up the stack.)
+If any of the objects previously protected by these monitors were in an inconsistent state,
+ other threads may now view these objects in an inconsistent state. Such objects are said to be damaged.
+ When threads operate on damaged objects, arbitrary behavior can result.
+ This behavior may be subtle and difficult to detect, or it may be pronounced.
+ Unlike other unchecked exceptions, ThreadDeath kills threads silently;
+ thus, the user has no warning that his program may be corrupted.
+ The corruption can manifest itself at any time after the actual damage occurs, even hours or days in the future.
+
+Couldn't I just catch the ThreadDeath exception and fix the damaged object?
+In theory, perhaps, but it would vastly complicate the task of writing correct multithreaded code.
+The task would be nearly insurmountable for two reasons:
+A thread can throw a ThreadDeath exception almost anywhere.
+ All synchronized methods and blocks would have to be studied in great detail, with this in mind.
+A thread can throw a second ThreadDeath exception while cleaning up from the first (in the catch or finally clause).
+ Cleanup would have to repeated till it succeeded. The code to ensure this would be quite complex.
+In sum, it just isn't practical.
+What about Thread.stop(Throwable)?
+In addition to all of the problems noted above,
+this method may be used to generate exceptions that its target thread is unprepared to handle
+(including checked exceptions that the thread could not possibly throw, were it not for this method).
+For example, the following method is behaviorally identical to Java's throw operation,
+ but circumvents the compiler's attempts to guarantee that the calling method has declared all of the checked exceptions
+ that it may throw:
+   static void sneakyThrow　(Throwable t) {
+        Thread.currentThread().stop(t);
+    }
+
+
+
+What should I use instead of Thread.stop?
+Most uses of stop should be replaced by code that simply modifies some variable to indicate that
+the target thread should stop running. The target thread should check this variable regularly,
+and return from its run method in an orderly fashion if the variable indicates that it is to stop running.
+ To ensure prompt communication of the stop-request, the variable must be volatile
+  (or access to the variable must be synchronized).
+For example, suppose your applet contains the following start, stop and run methods:
+   private Thread blinker;
+
+    public void start() {
+        blinker = new Thread(this);
+        blinker.start();
+    }
+
+    public void stop() {
+        blinker.stop();  // UNSAFE!
+    }
+
+    public void run() {
+        while (true) {
+            try {
+                Thread.sleep(interval);
+            } catch (InterruptedException e){
+            }
+            repaint();
+        }
+    }
+
+
+You can avoid the use of Thread.stop by replacing the applet's stop and run methods with:
+   private volatile Thread blinker;
+
+    public void stop() {
+        blinker = null;
+    }
+
+    public void run() {
+        Thread thisThread = Thread.currentThread();
+        while (blinker == thisThread) {
+            try {
+                Thread.sleep(interval);
+            } catch (InterruptedException e){
+            }
+            repaint();
+        }
+    }
+
+
+
+How do I stop a thread that waits for long periods (e.g., for input)?
+That's what the Thread.interrupt method is for. The same "state based"
+signaling mechanism shown above can be used, but the state change (blinker = null,
+in the previous example) can be followed by a call to Thread.interrupt, to interrupt the wait:
+   public void stop() {
+        Thread moribund = waiter;
+        waiter = null;
+        moribund.interrupt();
+    }
+
+
+For this technique to work, it's critical that any method that catches an interrupt exception
+ and is not prepared to deal with it immediately reasserts the exception. We say reasserts rather than rethrows,
+ because it is not always possible to rethrow the exception. If the method that catches
+ the InterruptedException is not declared to throw this (checked) exception,
+ then it should "reinterrupt itself" with the following incantation:
+   Thread.currentThread().interrupt();
+
+
+This ensures that the Thread will reraise the InterruptedException as soon as it is able.
+What if a thread doesn't respond to Thread.interrupt?
+In some cases, you can use application specific tricks. For example, if a thread is waiting on a known socket,
+you can close the socket to cause the thread to return immediately. Unfortunately,
+there really isn't any technique that works in general. It should be noted that in all situations
+ where a waiting thread doesn't respond to Thread.interrupt, it wouldn't respond to Thread.stop either.
+ Such cases include deliberate denial-of-service attacks, and I/O operations for which thread.stop and thread.
+ interrupt do not work properly.
+
+Why are Thread.suspend and Thread.resume deprecated?
+Thread.suspend is inherently deadlock-prone. If the target thread holds a lock on the monitor
+protecting a critical system resource when it is suspended, no thread can access this resource
+until the target thread is resumed.
+ If the thread that would resume the target thread attempts to lock this monitor prior to calling resume,
+  deadlock results. Such deadlocks typically manifest themselves as "frozen" processes.
+
+What should I use instead of Thread.suspend and Thread.resume?
+As with Thread.stop, the prudent approach is to have the "target thread" poll a variable
+indicating the desired state of the thread (active or suspended). When the desired state is suspended,
+the thread waits using Object.wait. When the thread is resumed, the target thread is notified using Object.notify.
+For example, suppose your applet contains the following mousePressed event handler,
+ which toggles the state of a thread called blinker:
+   private boolean threadSuspended;
+
+    Public void mousePressed(MouseEvent e) {
+        e.consume();
+
+        if (threadSuspended)
+            blinker.resume();
+        else
+            blinker.suspend();  // DEADLOCK-PRONE!
+
+        threadSuspended = !threadSuspended;
+    }
+
+
+You can avoid the use of Thread.suspend and Thread.resume by replacing the event handler above with:
+   public synchronized void mousePressed(MouseEvent e) {
+        e.consume();
+
+        threadSuspended = !threadSuspended;
+
+        if (!threadSuspended)
+            notify();
+    }
+
+
+and adding the following code to the "run loop":
+               synchronized(this) {
+                    while (threadSuspended)
+                        wait();
+                }
+
+
+The wait method throws the InterruptedException, so it must be inside a try ... catch clause.
+ It's fine to put it in the same clause as the sleep.
+ The check should follow (rather than precede)
+ the sleep so the window is immediately repainted when the thread is "resumed." The resulting run method follows:
+   public void run() {
+        while (true) {
+            try {
+                Thread.sleep(interval);
+
+                synchronized(this) {
+                    while (threadSuspended)
+                        wait();
+                }
+            } catch (InterruptedException e){
+            }
+            repaint();
+        }
+    }
+
+
+Note that the notify in the mousePressed method and the wait in the run method are inside synchronized blocks.
+This is required by the language, and ensures that wait andnotify are properly serialized. In practical terms,
+ this eliminates race conditions that could cause the "suspended" thread to miss a notify
+  and remain suspended indefinitely.
+While the cost of synchronization in Java is decreasing as the platform matures, it will never be free.
+A simple trick can be used to remove the synchronization that we've added to each iteration of the "run loop."
+The synchronized block that was added is replaced by a slightly more complex piece of code
+that enters a synchronized block only if the thread has actually been suspended:
+               if (threadSuspended) {
+                    synchronized(this) {
+                        while (threadSuspended)
+                            wait();
+                    }
+                }
+
+
+In the absence of explicit synchronization,
+threadSuspended must be made volatile to ensure prompt communication of the suspend-request.
+The resulting run method is:
+   private volatile boolean threadSuspended;
+
+    public void run() {
+        while (true) {
+            try {
+                Thread.sleep(interval);
+
+                if (threadSuspended) {
+                    synchronized(this) {
+                        while (threadSuspended)
+                            wait();
+                    }
+                }
+            } catch (InterruptedException e){
+            }
+            repaint();
+        }
+    }
+
+
+
+Can I combine the two techniques to produce a thread that may be safely "stopped" or "suspended"?
+Yes, it's reasonably straightforward. The one subtlety is that the target thread may already be suspended
+at the time that another thread tries to stop it. If the stop method merely sets the state variable (blinker) to null,
+ the target thread will remain suspended (waiting on the monitor), rather than exiting gracefully as it should.
+ If the applet is restarted, multiple threads could end up waiting on the monitor at the same time,
+ resulting in erratic behavior.
+To rectify this situation, the stop method must ensure that the target thread resumes immediately if it is suspended.
+ Once the target thread resumes, it must recognize immediately that it has been stopped, and exit gracefully.
+  Here's how the resulting run and stop methods look:
+  
+   public void run() {
+        Thread thisThread = Thread.currentThread();
+        while (blinker == thisThread) {
+            try {
+                Thread.sleep(interval);
+
+                synchronized(this) {
+                    while (threadSuspended && blinker==thisThread)
+                        wait();
+                }
+            } catch (InterruptedException e){
+            }
+            repaint();
+        }
+    }
+
+    public synchronized void stop() {
+        blinker = null;
+        notify();
+    }
+
+
+If the stop method calls Thread.interrupt, as described above, it needn't call notify as well,
+ but it still must be synchronized. This ensures that the target thread won't miss an interrupt due to a race condition.
+What about Thread.destroy?
+Thread.destroy was never implemented and has been deprecated. If it were implemented,
+ it would be deadlock-prone in the manner of Thread.suspend.
+  (In fact, it is roughly equivalent to Thread.suspend without the possibility of a subsequent Thread.resume.)
+Why is Runtime.runFinalizersOnExit deprecated?
+Because it is inherently unsafe. It may result in finalizers being called on live objects while other
+threads are concurrently manipulating those objects, resulting in erratic behavior or deadlock.
+ While this problem could be prevented if the class whose objects are being finalized
+ were coded to "defend against" this call, most programmers do not defend against it.
+ They assume that an object is dead at the time that its finalizer is called.
+Further, the call is not "thread-safe" in the sense that it sets a VM-global flag.
+This forces every class with a finalizer to defend against the finalization of live objects!
+
+
+
+
+
+
+
+
