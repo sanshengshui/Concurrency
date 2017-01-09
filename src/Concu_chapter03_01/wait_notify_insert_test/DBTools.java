@@ -1,0 +1,37 @@
+package Concu_chapter03_01.wait_notify_insert_test;
+
+/**
+ * Created by jamesmsw on 17-1-9.
+ */
+public class DBTools {
+    volatile private boolean prevIsA=false;
+    synchronized public void backupA(){
+        try{
+            while(prevIsA==true){
+                wait();
+            }
+            for(int i=0;i<5;i++){
+                System.out.println("*-*-*-");
+            }
+            prevIsA=true;
+            notifyAll();
+        }catch (InterruptedException e){
+            e.printStackTrace();
+        }
+    }
+    synchronized  public void backupB(){
+        try{
+            while(prevIsA==false){
+                wait();
+            }
+            for (int i=0;i<5;i++){
+                System.out.println("-------");
+            }
+            prevIsA=false;
+            notifyAll();
+
+        }catch (InterruptedException e){
+            e.printStackTrace();
+        }
+    }
+}
