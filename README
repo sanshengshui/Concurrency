@@ -525,8 +525,74 @@ Further, the call is not "thread-safe" in the sense that it sets a VM-global fla
 This forces every class with a finalizer to defend against the finalization of live objects!
 
 
+定时器Timer的使用
+在JDK库中Timer类主要负责计划任务的功能，也就是在指定的时间开始执行某一个任务。Timer类的主要作用就是设置计划任务，
+但封装任务的类却是TimerTask类，执行计划任务的代码要放入TimerTask的子类中，因为TimerTask是一个抽象类。
+
+public Timer(){
+  this("Timer-"+serialNumber)
+}
+
+此构造方法调用的是如下构造方法:
+public Timer(String name){
+   thread.serName(name);
+   thread.start();
+   }
+查看构造方法可以得知，创建一个Timer就是启动一个新的线程，这个新启动线程并不是守护线程，它一直在运行。
+
+void	cancel()
+Terminates this timer, discarding any currently scheduled tasks.
+TimerTask类中的cancel()方法的作用是将自身从任务队列中清除。
+
+与此不同的是:
+Timer类中的cancel()方法的作用是将任务队列中的全部任务清空
+Timer类中cancel()方法有时并不一定会停止执行计划任务，而是正常执行。这是因为Timer类中的cancel()方法有时并没有争抢到queue锁，
+所以TimerTask类中的任务继续正常执行。
 
 
+int	purge()
+Removes all cancelled tasks from this timer's task queue.
+
+void	schedule(TimerTask task, Date time)
+Schedules the specified task for execution at the specified time.
+该方法的作用是在指定的日期执行一次某一任务。
+
+void	schedule(TimerTask task, Date firstTime, long period)
+Schedules the specified task for repeated fixed-delay execution, beginning at the specified time.
+该方法的作用是在指定的日期之后，按指定的间隔周期性的无限循环地执行某一任务
+
+void	schedule(TimerTask task, long delay)
+Schedules the specified task for execution after the specified delay.
+该方法的作用是以执行schedule(TimerTask task,long delay)方法当前的时间为参考时间，在此时间基础上延时指定的毫秒数后
+执行一次TimerTask任务
+
+void	schedule(TimerTask task, long delay, long period)
+Schedules the specified task for repeated fixed-delay execution, beginning after the specified delay.
+该方法的作用是以执行schedule(TimerTask task,long delay,long period)方法当前的时间为参考时间，在此时间基础上延时指定的毫秒数，
+再以某一间隔时间无限次数地执行某一任务。
+
+void	scheduleAtFixedRate(TimerTask task, Date firstTime, long period)
+Schedules the specified task for repeated fixed-rate execution, beginning at the specified time.
+
+void	scheduleAtFixedRate(TimerTask task, long delay, long period)
+Schedules the specified task for repeated fixed-rate execution, beginning after the specified delay.
+
+
+scheduleAtFixedRate和schedule
+方法schedule和方法scheduleAtFixedRate都会按顺序执行，所以不要考虑非线程安全的情况。
+
+方法schedule和sheduleAtFixedRate主要的区别只在于不延时的情况。
+
+使用schedule方法:如果执行任务的时间没有被延时，那么下一次任务的执行时间参考的是上一次任务的"开始"时的时间来计算。
+
+使用scheduleAtFixedRate方法:如果执行任务的时间没有被延时，那么下一次任务的执行时间参考的是上一次任务的"结束"时的时间来计算。
+
+延时的情况则没有区别，也就是使用schedule或scheduleAtFixedRate方法都是如果执行任务的时间被延时，那么下一次任务的执行时间
+参考的是上一次任务"结束"时的时间来计算。
+
+schedule方法不具有追赶执行性
+
+sheduleAtFixedRate方法具有追赶执行性
 
 
 
